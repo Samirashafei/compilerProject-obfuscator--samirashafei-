@@ -1,3 +1,6 @@
 # compilerProject-obfuscator--samirashafei-
- سمیرا شفیعی 
+
+اعضای گروه 
 پرنیان بهرامی 
+سمیرا شفیعی 
+
