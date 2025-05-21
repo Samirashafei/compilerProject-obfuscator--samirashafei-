@@ -14,6 +14,41 @@ def get_random_dead_code():
         "if (1 == 2) { int hidden = 1; }",
         "bool dummy = false;"
     ])
+# expression replacment 
+def replace_expression_pattern(tokens, i, name_map):
+    if i + 2 >= len(tokens):
+        return None, 1
+
+    t1, t2, t3 = tokens[i], tokens[i + 1], tokens[i + 2]
+    valid = lambda t: t.type in [MiniCLexer.Identifier, MiniCLexer.IntegerConstant]
+
+    if valid(t1) and valid(t3):
+        a = t1.text
+        b = t3.text
+        op = t2.text
+
+        # جایگزینی نام‌ها اگر در نگاشت هستند
+        if t1.type == MiniCLexer.Identifier and a in name_map:
+            a = name_map[a]
+        if t3.type == MiniCLexer.Identifier and b in name_map:
+            b = name_map[b]
+
+        if op == '+':
+            return f"{a} - (-{b})", 3
+        elif op == '-':
+            return f"{a} + (-{b})", 3
+        elif op == '*' and b == '2':
+            return f"{a} << 1", 3
+        elif op == '/' and b == '2':
+            return f"{a} >> 1", 3
+        elif op == '==':
+            return f"!({a} != {b})", 3
+        elif op == '&&':
+            return f"!(!{a} || !{b})", 3
+        elif op == '||':
+            return f"!(!{a} && !{b})", 3
+
+    return None, 1
 
 def obfuscate_and_save(input_file, output_file, techniques):
     input_stream = FileStream(input_file, encoding='utf-8')
@@ -76,6 +111,8 @@ def obfuscate_and_save(input_file, output_file, techniques):
             i += 1
 
     print(f" فایل خروجی Obfuscated تولید شد: {output_file}")
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='MiniC Obfuscator Tool')
     parser.add_argument('--input', required=True, help='مسیر فایل ورودی')
@@ -87,3 +124,4 @@ if __name__ == '__main__':
     selected_techniques = args.techniques.split(',')
 
     obfuscate_and_save(args.input, args.output, selected_techniques)
+
