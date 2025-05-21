@@ -48,3 +48,10 @@ def main():
 
     # نمایش درخت در کنسول (متنی)
     print(tree.toStringTree(recog=parser))
+    # تولید فایل .dot برای Graphviz
+    dot_content = to_dot(tree, parser)
+    with open("tree.dot", "w", encoding="utf-8") as f:
+        f.write(dot_content)
+
+if __name__ == '__main__':
+    main()
