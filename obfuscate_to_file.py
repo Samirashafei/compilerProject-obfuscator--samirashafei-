@@ -2,7 +2,7 @@ from antlr4 import *
 from MiniCLexer import MiniCLexer
 from MiniCParser import MiniCParser
 from ObfuscatorVisitor import ObfuscatorVisitor
-import random 
+import random
 import argparse
 
 def get_random_dead_code():
@@ -16,19 +16,20 @@ def get_random_dead_code():
     ])
 
 def obfuscate_and_save(input_file, output_file, techniques):
-    input_stream = FileStream(input_file, encoding='utf-8')
-    lexer = MiniCLexer(input_stream)
-    token_stream = CommonTokenStream(lexer)
-    parser = MiniCParser(token_stream)
-    tree = parser.program()
-
-    visitor = ObfuscatorVisitor() if 'rename' in techniques else None
+    # مرحله اول: اگر تکنیک rename انتخاب شده، visitor را اعمال کن
     name_map = {}
+    if 'rename' in techniques:
+        input_stream_temp = FileStream(input_file, encoding='utf-8')
+        lexer_temp = MiniCLexer(input_stream_temp)
+        token_stream_temp = CommonTokenStream(lexer_temp)
+        parser_temp = MiniCParser(token_stream_temp)
+        tree = parser_temp.program()
 
-    if visitor:
+        visitor = ObfuscatorVisitor()
         visitor.visit(tree)
         name_map = visitor.name_map
 
+    # مرحله دوم: توکن‌ها را بخوان
     input_stream = FileStream(input_file, encoding='utf-8')
     lexer = MiniCLexer(input_stream)
     token_stream = CommonTokenStream(lexer)
@@ -45,20 +46,13 @@ def obfuscate_and_save(input_file, output_file, techniques):
             if token.type == Token.EOF:
                 break
 
-            if 'expr' in techniques:
-                replacement, skip = replace_expression_pattern(tokens, i, name_map)
-                if replacement:
-                    f.write(replacement + ' ')
-                    i += skip
-                    continue
-
             text = token.text
 
+            # تکنیک rename
             if 'rename' in techniques and token.type == MiniCLexer.Identifier and text in name_map:
                 text = name_map[text]
 
             f.write(text)
-
 
             if text == '{' and 'deadcode' in techniques and not dead_code_inserted:
                 f.write('\n    ' + get_random_dead_code() + '\n')
@@ -75,15 +69,15 @@ def obfuscate_and_save(input_file, output_file, techniques):
 
             i += 1
 
-    print(f" فایل خروجی Obfuscated تولید شد: {output_file}")
+    print(f"✅ فایل خروجی Obfuscated تولید شد: {output_file}")
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='MiniC Obfuscator Tool')
     parser.add_argument('--input', required=True, help='مسیر فایل ورودی')
     parser.add_argument('--output', required=True, help='مسیر فایل خروجی')
-    parser.add_argument('--techniques', default='rename,deadcode,expr', help='تکنیک‌های Obfuscation به صورت comma-separated')
+    parser.add_argument('--techniques', default='deadcode', help='تکنیک‌های Obfuscation به صورت comma-separated')
 
     args = parser.parse_args()
-    
     selected_techniques = args.techniques.split(',')
 
     obfuscate_and_save(args.input, args.output, selected_techniques)
