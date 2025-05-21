@@ -82,6 +82,7 @@ unaryExpression
     : ('+' | '-' | '!' | '&' | '*')? postfixExpression;
 
 // === استفاده از تابع، اشاره‌گر یا عضوی از struct ===
+//امتیازی
 postfixExpression
     : primaryExpression ('.' Identifier | '->' Identifier | '(' argumentList? ')')*;
 
